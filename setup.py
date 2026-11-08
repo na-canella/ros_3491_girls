@@ -1,3 +1,5 @@
+import os
+from glob import glob
 from setuptools import setup
 
 package_name = 'super_na_canella_study_pkg'
@@ -10,6 +12,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        # Вот эта строчка нужна, чтобы ROS 2 видел папку launch
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -22,7 +26,7 @@ setup(
         'console_scripts': [
             'time_printer = super_na_canella_study_pkg.time_printer:main',
             'even_pub = super_na_canella_study_pkg.even_number_publisher:main',
-            'overflow_listener = super_na_canella_study_pkg.overflow_listener:main',  # <-- НОВАЯ СТРОКА
+            'overflow_listener = super_na_canella_study_pkg.overflow_listener:main',
         ],
     },
 )

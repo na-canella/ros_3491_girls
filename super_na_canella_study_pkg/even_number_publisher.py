@@ -6,22 +6,30 @@ from std_msgs.msg import Int32
 class EvenNumberPublisher(Node):
     def __init__(self):
         super().__init__('even_pub')
-        # Создаем два публикатора: для четных чисел и для переполнения
-        self.publisher_ = self.create_publisher(Int32, 'even_numbers', 10)
-        self.overflow_pub = self.create_publisher(Int32, 'overflow', 10)
-        self.timer = self.create_timer(0.1, self.timer_callback)
+        
+        # 1. Объявляем параметры (наши "ручки настройки")
+        self.declare_parameter('publish_frequency', 10.0)
+        self.declare_parameter('overflow_threshold', 100)
+        self.declare_parameter('topic_name', '/even_numbers')
+
+        # 2. Читаем их значения
+        freq = self.get_parameter('publish_frequency').value
+        self.threshold = self.get_parameter('overflow_threshold').value
+        topic = self.get_parameter('topic_name').value
+
+        self.publisher_ = self.create_publisher(Int32, topic, 10)
+        self.overflow_pub = self.create_publisher(Int32, '/overflow', 10)
+        self.timer = self.create_timer(1.0 / freq, self.timer_callback)
         self.num = 0
 
     def timer_callback(self):
-        if self.num >= 100:
-            # Если дошли до 100 - отправляем в топик overflow
+        if self.num >= self.threshold:
             overflow_msg = Int32()
-            overflow_msg.data = 100
+            overflow_msg.data = self.num
             self.overflow_pub.publish(overflow_msg)
-            self.get_logger().info('--- ПЕРЕПОЛНЕНИЕ! СБРОС НА 0 ---')
+            self.get_logger().info(f'--- ПЕРЕПОЛНЕНИЕ! СБРОС НА 0 (Порог: {self.threshold}) ---')
             self.num = 0
         else:
-            # Иначе публикуем четное число
             msg = Int32()
             msg.data = self.num
             self.publisher_.publish(msg)
